@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SepsisAI — Clinical Decision Support</title>
+  <meta name="description" content="Multimodal AI-powered sepsis risk prediction using clinical notes and 24-hour lab trends." />
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+
+  <!-- Plotly -->
+  <script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+  <!-- ── Header ──────────────────────────────────────────────────────────── -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="logo-group">
+        <span class="logo-icon">🏥</span>
+        <div>
+          <h1 class="app-title">SepsisAI</h1>
+          <span class="app-subtitle">Clinical Decision Support System</span>
+        </div>
+      </div>
+      <div class="header-badges">
+        <span class="badge badge--model">BioClinicalBERT + Transformer</span>
+        <span class="badge badge--llm">Llama-3 · Groq</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ── Main ────────────────────────────────────────────────────────────── -->
+  <main class="main-content">
+
+    <!-- Input Grid -->
+    <section class="input-grid" id="input-section">
+
+      <!-- Clinical Notes -->
+      <div class="card card--notes">
+        <div class="card-header">
+          <span class="card-icon">📝</span>
+          <div>
+            <h2 class="card-title">Patient Clinical Notes</h2>
+            <p class="card-desc">Paste the EHR progress note or admission summary</p>
+          </div>
+        </div>
+        <textarea
+          id="note-input"
+          class="note-textarea"
+          placeholder="e.g. Patient is a 67-year-old male admitted with fever (39.2°C), hypotension (BP 88/54 mmHg), suspected pneumonia…"
+          spellcheck="false"
+        ></textarea>
+        <div class="char-counter"><span id="char-count">0</span> characters</div>
+      </div>
+
+      <!-- Lab CSV Upload -->
+      <div class="card card--labs">
+        <div class="card-header">
+          <span class="card-icon">🧪</span>
+          <div>
+            <h2 class="card-title">24-Hour Lab Trend Data</h2>
+            <p class="card-desc">Upload a CSV with columns: Lactate, WBC, Creatinine, Platelets, Bilirubin</p>
+          </div>
+        </div>
+
+        <label class="dropzone" id="drop-zone" for="csv-input">
+          <div class="dropzone-content" id="drop-content">
+            <div class="dropzone-icon">📂</div>
+            <p class="dropzone-primary">Drop your CSV here or <span class="link-text">browse</span></p>
+            <p class="dropzone-secondary">Max 24 rows · Required columns: Lactate, WBC, Creatinine, Platelets, Bilirubin</p>
+          </div>
+          <input type="file" id="csv-input" accept=".csv" class="hidden-input" />
+        </label>
+
+        <!-- CSV Preview -->
+        <div id="csv-preview-wrapper" class="csv-preview-wrapper hidden">
+          <div class="preview-header">
+            <span class="preview-label">📊 Preview</span>
+            <button id="clear-csv-btn" class="btn-clear">✕ Remove</button>
+          </div>
+          <div class="table-scroll">
+            <table id="csv-table" class="preview-table"></table>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Run Button -->
+    <div class="run-row">
+      <button id="run-btn" class="btn-run" disabled>
+        <span class="btn-run-icon">⚡</span>
+        <span id="btn-text">Run Multimodal Prediction</span>
+      </button>
+    </div>
+
+    <!-- ── Results ─────────────────────────────────────────────────────── -->
+    <section id="results-section" class="results-section hidden">
+
+      <!-- Risk Banner -->
+      <div id="risk-banner" class="risk-banner">
+        <div class="banner-left">
+          <span id="banner-icon" class="banner-icon"></span>
+          <div>
+            <div id="banner-status" class="banner-status"></div>
+            <div id="banner-detail" class="banner-detail"></div>
+          </div>
+        </div>
+        <div id="banner-percent" class="banner-percent"></div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="charts-row">
+        <div class="card card--gauge">
+          <h3 class="chart-title">Sepsis Risk Index</h3>
+          <div id="gauge-chart"></div>
+        </div>
+        <div class="card card--trends">
+          <h3 class="chart-title">📈 24-Hour Physiological Trends</h3>
+          <div id="trends-chart"></div>
+        </div>
+      </div>
+
+      <!-- Metrics Strip -->
+      <div class="metrics-strip" id="metrics-strip"></div>
+
+      <!-- AI Clinical Summary -->
+      <div class="card card--summary">
+        <div class="card-header">
+          <span class="card-icon">🤖</span>
+          <div>
+            <h3 class="card-title">AI Clinical Insights</h3>
+            <p class="card-desc">Powered by Llama-3.3-70b · Groq</p>
+          </div>
+          <div id="summary-loader" class="dot-loader hidden">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+        <div id="summary-content" class="summary-content"></div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- ── Toast ───────────────────────────────────────────────────────────── -->
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="/static/main.js"></script>
+</body>
+</html>
