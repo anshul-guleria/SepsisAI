@@ -1,13 +1,3 @@
-"""
-Flask backend for the Clinical Sepsis Detection System.
-
-Endpoints
----------
-GET  /                   → serve the single-page frontend
-POST /api/predict        → multimodal prediction (text + CSV)
-POST /api/clinical-summary → AI clinical summary via Groq
-"""
-
 import io
 import os
 import json
@@ -22,8 +12,6 @@ app = Flask(__name__, template_folder="templates", static_folder="static")
 CORS(app)
 
 
-# ─── Routes ───────────────────────────────────────────────────────────────────
-
 @app.route("/")
 def index():
     return render_template("index.html")
@@ -31,24 +19,6 @@ def index():
 
 @app.route("/api/predict", methods=["POST"])
 def predict():
-    """
-    Expects a multipart/form-data request with:
-      - note_text  (string)
-      - lab_csv    (file, CSV)
-    Returns JSON:
-      {
-        "probability": float,          # 0–1
-        "risk_percent": float,         # 0–100
-        "status": "ALERT" | "STABLE",
-        "lab_trends": {                # per-column arrays, length 24
-          "Lactate": [...],
-          "WBC": [...],
-          ...
-        },
-        "last_values": { col: val },   # most recent readings
-        "deltas":      { col: delta }  # change from hour 0 → 23
-      }
-    """
     note_text = request.form.get("note_text", "").strip()
     lab_file  = request.files.get("lab_csv")
 
@@ -83,10 +53,6 @@ def predict():
 
 @app.route("/api/clinical-summary", methods=["POST"])
 def clinical_summary():
-    """
-    Expects JSON: { "note_text": "..." }
-    Returns JSON: { "summary": "..." }
-    """
     data = request.get_json(force=True, silent=True) or {}
     note = data.get("note_text", "").strip()
     if not note:
@@ -96,10 +62,7 @@ def clinical_summary():
     return jsonify({"summary": summary})
 
 
-# ─── Entry Point ──────────────────────────────────────────────────────────────
-
 if __name__ == "__main__":
-    # Pre-warm the models on startup so the first request is fast
     print("⚙️  Pre-loading AI models …")
     try:
         from model import load_models

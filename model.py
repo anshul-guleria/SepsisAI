@@ -5,8 +5,6 @@ import pandas as pd
 from transformers import AutoTokenizer, AutoModel
 import os
 
-# ─── Model Definition ─────────────────────────────────────────────────────────
-
 class SepsisTransformerMultimodal(nn.Module):
     def __init__(self, lab_features=5, time_steps=24, bert_dim=768, d_model=64, nhead=4):
         super(SepsisTransformerMultimodal, self).__init__()
@@ -37,7 +35,6 @@ class SepsisTransformerMultimodal(nn.Module):
 _cache = {}
 
 def load_models():
-    """Load and cache tokenizer, BERT, and sepsis model."""
     if _cache:
         return _cache["tokenizer"], _cache["bert_model"], _cache["sepsis_model"]
 
@@ -56,8 +53,6 @@ def load_models():
     return tokenizer, bert_model, sepsis_model
 
 
-# ─── Inference Helpers ─────────────────────────────────────────────────────────
-
 def get_text_embedding(text, tokenizer, bert_model):
     inputs = tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=512)
     with torch.no_grad():
@@ -66,10 +61,6 @@ def get_text_embedding(text, tokenizer, bert_model):
 
 
 def process_lab_csv(file_stream):
-    """
-    Read a CSV file-like object, normalise to exactly 24 rows,
-    and return a (1, 24, 5) float tensor plus the raw DataFrame.
-    """
     df = pd.read_csv(file_stream)
     required_cols = ["Lactate", "WBC", "Creatinine", "Platelets", "Bilirubin"]
 
@@ -89,7 +80,6 @@ def process_lab_csv(file_stream):
 
 
 def run_prediction(note_text: str, labs_tensor: torch.Tensor):
-    """Run the full inference pipeline and return probability (0-1)."""
     tokenizer, bert_model, sepsis_model = load_models()
     text_emb = get_text_embedding(note_text, tokenizer, bert_model)
     with torch.no_grad():
